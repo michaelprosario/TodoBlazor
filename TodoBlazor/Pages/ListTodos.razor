@@ -1,0 +1,49 @@
+﻿@page "/ListTodos"
+@using Todo.Core
+@inject ITodoService TodoService
+@inject NavigationManager NavigationManager
+
+@if (Records != null)
+{
+    <h3>List Todos</h3>
+    <button @onclick="OnNewRecord">Add Record</button>
+    <table border="3" width="100%">
+        <tr>
+            <td>
+                Name
+            </td>
+            <td>
+                Status
+            </td>
+        </tr>
+
+        @foreach (var record in Records)
+        {
+            <tr>
+                <td>
+                    <a href="EditRecord/@record.Id">
+                        @record.Name
+                    </a>
+                </td>
+                <td>
+                    @record.Status
+                </td>
+            </tr>
+        }
+    </table>
+}
+
+@code
+{
+    List<TodoItem> Records = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Records = await Task.Run(() => TodoService.GetAll());
+    }
+
+    protected async Task OnNewRecord()
+    {
+        NavigationManager.NavigateTo("EditRecord/new");
+    }
+}

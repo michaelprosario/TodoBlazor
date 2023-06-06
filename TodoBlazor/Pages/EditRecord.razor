@@ -1,0 +1,119 @@
+﻿@page "/EditRecord/{Id}"
+@using Todo.Core
+@inject ITodoService TodoService
+@inject NavigationManager NavigationManager
+<style>
+    .divInfoBar
+    {
+        background-color: cornsilk;
+        padding: 25px;
+        font-weight: bold;
+    }
+</style>
+@if (Id == "new")
+{
+    <h3>Add Todo</h3>
+}
+else
+{
+    <h3>Edit Todo</h3>
+}
+
+<div class="divInfoBar">
+    @InfoBarText
+</div>
+
+@if (Record != null)
+{
+    <div class="form-group">
+        <label for="name">Name:</label>
+        <input id="name" class="form-control" type="text" @bind="@Record.Name"/>
+    </div>
+
+    <div class="form-group">
+        <label for="details">Details:</label>
+        <textarea id="details" class="form-control" @bind="@Record.Details"></textarea>
+    </div>
+
+    <div class="form-group">
+        <label for="status">Status:</label>
+        <input id="status" class="form-control" type="text" @bind="@Record.Status"/>
+    </div>
+
+    <div class="form-group">
+        <label for="priority">Priority:</label>
+        <input id="priority" class="form-control" type="number" @bind="@Record.Priority"/>
+    </div>
+
+    <div class="form-group">
+        <label for="complexity">Complexity:</label>
+        <input id="complexity" class="form-control" type="number" @bind="@Record.Complexity"/>
+    </div>
+
+    <button @onclick="OnSaveRecord">Save</button>
+    <button @onclick="OnCloseRecord">Close</button>
+}
+
+
+@code {
+    // Helpful blog post in Blazor WASM
+    // https://www.c-sharpcorner.com/article/blazor-crud-app-using-entity-framework-core-in-net-5/
+
+    [Parameter]
+    public string Id { get; set; }
+
+    TodoItem Record;
+    public string InfoBarText { get; set; } = "Enter data about todo";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id == "new")
+        {
+            Record = await Task.Run(() => OnNewRecord());
+        }
+        else
+        {
+            Record = await Task.Run(() => TodoService.Get(Id));
+        }
+    }
+
+    protected async Task OnSaveRecord()
+    {
+        await OnSave();
+    }
+
+    protected async Task OnCloseRecord()
+    {
+        NavigationManager.NavigateTo("ListTodos");
+    }
+
+    private TodoItem OnNewRecord()
+    {
+        return new TodoItem
+        {
+            Id = Guid.NewGuid().ToString(),
+            Status = "New",
+            Priority = 1,
+            Complexity = 1,
+            Name = "",
+            Details = ""
+        };
+    }
+
+    private async Task OnSave()
+    {
+        if (Id == "new")
+        {
+            TodoService.Add(Record);
+            Id = Record.Id;
+        }
+        else
+        {
+            TodoService.Update(Record);
+        }
+
+        InfoBarText = "Record saved on " + DateTime.Now;
+        OnCloseRecord();
+    }
+
+}
